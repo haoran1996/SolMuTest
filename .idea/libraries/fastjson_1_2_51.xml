@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="fastjson-1.2.51">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/fastjson-1.2.51.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jcommon-1.0.20.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jfreechart-1.0.15.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/JMetal-4.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jnotify-0.94.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/junit-4.11.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/mysql-connector-java-8.0.13.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/rsyntaxtextarea.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
