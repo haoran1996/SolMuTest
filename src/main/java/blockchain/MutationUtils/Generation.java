@@ -1,8 +1,7 @@
 package blockchain.MutationUtils;
 
-import blockchain.Mutator.BooleanFalseReturnValsMutator;
-import blockchain.Mutator.BooleanTrueReturnValsMutator;
-import blockchain.Mutator.Mutator;
+
+import blockchain.FileUtils.FileUtil;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -32,9 +31,11 @@ public class Generation {
         sb.append(MutationProjectPath);
         sb.append("\\contracts");
         MutationContractsPath = sb.toString();
+
+        List<File> testfilelist = FileUtil.getFileUnderTest(MutationContractsPath);
         MutationNum = 0;
         for(int i=0;i<=mutatorlist.size()-1;i++){
-            applyMutatorToAllFile(sb.toString(),mutatorlist.get(i));
+            applyMutatorToAllFile(testfilelist,mutatorlist.get(i));
         }
         System.out.println("——————————————");
         System.out.println("本次变异测试共生成" + MutationNum + "个变异体");
@@ -43,22 +44,20 @@ public class Generation {
 
     /**
      * 对contracts文件夹下所有文件运用单个变异算子
-     * @param contractsDir
+     * @param
      * @param mutationOperator
      */
-    public static void applyMutatorToAllFile(String contractsDir,String mutationOperator){
+    public static void applyMutatorToAllFile(List<File> testfilelist,String mutationOperator){
         try {
-            File dir = new File(contractsDir);
-            File[] fs = dir.listFiles();
             int num = 0;
-            for(File f:fs){
+            for(File f:testfilelist){
                 if(!f.isDirectory()){
                     String filepath = f.getAbsolutePath();
                     num = num + generateMutation(filepath,mutationOperator);
                 }
             }
             MutationNum = MutationNum + num;
-            System.out.println("—" + mutationOperator + "共生成" + num + "个变异体");
+            System.out.println("——" + mutationOperator + "共生成" + num + "个变异体");
         } catch (Exception e) {
             e.printStackTrace();
         }

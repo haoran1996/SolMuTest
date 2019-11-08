@@ -27,6 +27,7 @@ public class CMDUtils {
                 if(string_Temp.indexOf("node.exe")!=-1){
                     Runtime.getRuntime().exec("taskkill /f /im node.exe");
                     System.out.println("结束node.exe进程");
+                    Thread.sleep(300);
                     break;
                 }
                 string_Temp = in.readLine();

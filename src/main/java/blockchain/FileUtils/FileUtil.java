@@ -9,15 +9,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  *
  */
 public class FileUtil {
-    private static ArrayList filelist = new ArrayList();
+    private static LinkedList filelist = new LinkedList();
+
     public static void main(String[] args){
-        delAllFile("E:\\blockchain\\MutationTest\\tempTC\\SkinCoin-token\\SolMuTest\\test");
+        String dir = "E:\\blockchain\\MutationTest\\TC\\cryptofin-solidity\\SolMuTest\\test";
+        String dir2 = "E:\\blockchain\\MutationTest\\TC\\cryptofin-solidity\\SolMuTest\\testcases";
+        CopyDir.copy(dir2,dir);
     }
 
     /**
@@ -129,7 +133,7 @@ public class FileUtil {
             } else {
                 temp = new File(path + File.separator + tempList[i]);
             }
-            if (temp.isFile()) {
+            if (temp.isFile() && !temp.getName().equals("assertRevert.js") && !temp.getName().equals("util.js")) {//删除test文件夹时有的文件不能删
                 temp.delete();
             }
             if (temp.isDirectory()) {
@@ -141,7 +145,7 @@ public class FileUtil {
     }
 
     /**
-     * 遍历文件夹下的文件
+     * 遍历test文件夹下的文件
      */
     public static List<File> getFileList(String strPath) {
         File dir = new File(strPath);
@@ -151,7 +155,7 @@ public class FileUtil {
                 String fileName = files[i].getName();
                 if (files[i].isDirectory()) { // 判断是文件还是文件夹
                     getFileList(files[i].getAbsolutePath()); // 获取文件绝对路径
-                } else if (fileName.endsWith(".js")) { // 判断文件名是否以.js结尾
+                } else if (!fileName.equals("assertRevert.js") && !fileName.equals("util.js")) { // 判断文件名是否以.js结尾
 //                    String strFileName = files[i].getAbsolutePath();
 //                    System.out.println("---" + strFileName);
                     filelist.add(files[i]);
@@ -162,4 +166,96 @@ public class FileUtil {
         }
         return filelist;
     }
+
+    //获取constracts文件夹下待测文件
+    public static List<File> getFileUnderTest(String strPath) {
+        filelist = new LinkedList();
+        File dir = new File(strPath);
+        File[] files = dir.listFiles(); // 该文件目录下文件全部放入数组
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].getName();
+                if (files[i].isDirectory()) { // 判断是文件还是文件夹
+                    getFileList(files[i].getAbsolutePath()); // 获取文件绝对路径
+                } else if (!fileName.contains("Migrations.sol")) { // 排除Migrations.sol
+//                    String strFileName = files[i].getAbsolutePath();
+//                    System.out.println("---" + strFileName);
+                    filelist.add(files[i]);
+                } else {
+                    continue;
+                }
+            }
+        }
+        return filelist;
+    }
+
+    /**
+     * 递归查找文件
+     * @param baseDirName  查找的文件夹路径
+     * @param targetFileName  需要查找的文件名
+     */
+    public static String findFile(String baseDirName, String targetFileName){
+        List<File> filelist = new ArrayList<>();
+        findFiles_1(baseDirName,targetFileName,filelist);
+        return filelist.get(0).getAbsolutePath();
+    }
+
+
+    public static void findFiles_1(String baseDirName, String targetFileName, List fileList) {
+        String tempName = null;
+        //判断目录是否存在
+        File baseDir = new File(baseDirName);
+        if (!baseDir.exists() || !baseDir.isDirectory()){
+            System.out.println("文件查找失败：" + baseDirName + "不是一个目录！");
+        } else {
+            String[] filelist = baseDir.list();
+            for (int i = 0; i < filelist.length; i++) {
+                File readfile = new File(baseDirName + "\\" + filelist[i]);
+                //System.out.println(readfile.getName());
+                if(!readfile.isDirectory()) {
+                    tempName =  readfile.getName();
+                    if (tempName.equals(targetFileName)) {
+                        //匹配成功，将文件名添加到结果集
+                        fileList.add(readfile.getAbsoluteFile());
+                    }
+                } else if(readfile.isDirectory()){
+                    findFiles_1(baseDirName + "\\" + filelist[i],targetFileName,fileList);
+                }
+            }
+        }
+    }
+
+    /**
+     * 查找solidity-coverage生成的文件
+     */
+    public static List<File> getHtmlFiles(String baseDirName,String Suffix) {
+        List<File> filelist = new ArrayList<>();
+        findFiles_2(baseDirName,Suffix,filelist);
+        return filelist;
+    }
+
+    public static void findFiles_2(String baseDirName, String Suffix, List fileList) {
+        String tempName = null;
+        //判断目录是否存在
+        File baseDir = new File(baseDirName);
+        if (!baseDir.exists() || !baseDir.isDirectory()){
+            System.out.println("文件查找失败：" + baseDirName + "不是一个目录！");
+        } else {
+            String[] filelist = baseDir.list();
+            for (int i = 0; i < filelist.length; i++) {
+                File readfile = new File(baseDirName + "\\" + filelist[i]);
+                //System.out.println(readfile.getName());
+                if(!readfile.isDirectory()) {
+                    tempName =  readfile.getName();
+                    if (tempName.endsWith(Suffix) && !tempName.equals("index.html")) {
+                        //匹配成功，将文件名添加到结果集
+                        fileList.add(readfile.getAbsoluteFile());
+                    }
+                } else if(readfile.isDirectory()){
+                    findFiles_2(baseDirName + "\\" + filelist[i],Suffix,fileList);
+                }
+            }
+        }
+    }
+
 }

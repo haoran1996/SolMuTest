@@ -2,11 +2,16 @@ package blockchain.CMDRedirect;
 
 
 
+import blockchain.ExtractUtils.ReadSolcovInfo;
 import blockchain.FileUtils.*;
+import blockchain.JDBC.MysqlUtil;
 
 import java.io.*;
+import java.sql.SQLException;
 
-import static blockchain.CMDRedirect.Main.MutationContractsPath;
+import static blockchain.CMDRedirect.Main.*;
+import static blockchain.CMDRedirect.Main.TestCondition;
+import static blockchain.CMDRedirect.Main.sql_statement;
 import static blockchain.ExtractUtils.getAST.getAST;
 
 public class CMDRedirect {
@@ -80,11 +85,102 @@ public class CMDRedirect {
         String cmd = sb.toString();
         System.out.println("启动solidity-coverage。。。");
         try {
-            Process pr2 = rt.exec(cmd);
             Main.begintime = System.currentTimeMillis();
-//            System.out.println("Solcov is running.");
+            Process pr2 = rt.exec(cmd);
+            System.out.println("Solcov is running.");
+            InputStreamReader ir = new InputStreamReader(pr2.getInputStream());
+            BufferedReader br = new LineNumberReader(ir);
+            while (br.readLine() != null) {
+            }
+            System.out.println("运行完毕。");
+            gain_solcresult();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void gain_solcresult(){
+        try {
+            endtime = System.currentTimeMillis();
+            TestCondition = ReadSolcovInfo.GetTestCondition(MutationProjectPath);
+            if(Main.TestCondition.equals("Compilation failed.")||Main.TestCondition.equals("Exiting without generating coverage")){
+                BranchCoverage = 0;
+                Coveredline = null;
+                TimeCost = endtime - begintime;
+            }
+            else{
+                BranchCoverage = ReadSolcovInfo.GetTotalCoverage(MutationProjectPath);
+                Coveredline = ReadSolcovInfo.getAllCoveredLines(MutationProjectPath);
+                TimeCost = endtime - begintime;
+            }
+            System.out.println("运行完成,正在将本次测试结果写入数据库。。。");
+            Thread.sleep(1000);
+            MysqlUtil.InsertTestFile(MutationInfo,TestFileName,
+                    BranchCoverage,Coveredline,TestCondition, TimeCost, sql_statement,DBName);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 直接运行truffle test并获取杀死情况
+      * @param FilePath
+     */
+    public static void RunTruffleTest(String FilePath){
+        Runtime rt = Runtime.getRuntime();
+        StringBuffer sb = new StringBuffer();
+        sb.append("cmd /c pushd ");
+        sb.append(FilePath);
+        sb.append(" && truffle test > ");
+        sb.append(FilePath);
+        sb.append("\\SolcovInfo.txt");
+        String cmd = sb.toString();
+        System.out.println("启动truffle test。。。");
+        try {
+            Process pr2 = rt.exec(cmd);
+            Main.begintime = System.currentTimeMillis();
+            System.out.println("Truffle is running.");
+            InputStreamReader ir = new InputStreamReader(pr2.getInputStream());
+            BufferedReader br = new LineNumberReader(ir);
+            while (br.readLine() != null) {
+            }
+            System.out.println("运行完毕。");
+            getTruffleMutationResult();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void getTruffleMutationResult(){
+        try {
+            Thread.sleep(1000);
+            Boolean CompileFailed = ReadSolcovInfo.isCompileFailed(MutationProjectPath);
+            //编译失败直接退出
+            if(CompileFailed == true){
+                BranchCoverage = 0;
+                Coveredline = null;
+                TestCondition = "Compilation failed.";
+                Thread.sleep(0);
+                System.out.println("运行完成,正在将本次测试结果写入数据库。。。");
+                MysqlUtil.InsertTestFile(MutationInfo,TestFileName,
+                        BranchCoverage,Coveredline,TestCondition,TimeCost,sql_statement,DBName);
+            } else{
+                System.out.println("**********************");
+                BranchCoverage = 0;
+                Coveredline = null;
+                TestCondition = ReadSolcovInfo.GetTestCondition(MutationProjectPath);
+                Thread.sleep(0);
+                System.out.println("运行完成,正在将本次测试结果写入数据库。。。");
+                MysqlUtil.InsertTestFile(MutationInfo,TestFileName,
+                        BranchCoverage,Coveredline,TestCondition,TimeCost,sql_statement,DBName);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally{
+            CMDUtils.KillNodeProcess();
         }
     }
 

@@ -1,5 +1,8 @@
 package blockchain.ExtractUtils;
 
+import blockchain.CMDRedirect.Main;
+import blockchain.FileUtils.FileUtil;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,40 +24,82 @@ public class ReadSolcovInfo {
         sb.append("\\SolcovInfo.txt");
         String CovInfoPath = sb.toString();
         BufferedReader br=null;
-        String testcondition = null;
         int temp = 0;
         try {
             InputStreamReader isr = new InputStreamReader(new FileInputStream(CovInfoPath));
             br=new BufferedReader(isr);
             String line = null;
             while((line=br.readLine())!= null){
-                if(line.contains("Some truffle tests failed while running coverage")){
-                    System.out.println("Test failed (mutant is killed).");
-                    testcondition = "Test failed (mutant is killed).";
+                if(line.contains("Compilation failed.")) {
+                    System.out.println("Compilation failed.");
+                    Main.TestCondition = "Compilation failed.";
                     temp = 1;
                     break;
-                }else if(line.contains("Compilation failed.")){
-                    System.out.println("Compilation failed.");
-                    testcondition = "Compilation failed.";
+                }
+                else if(line.contains("Some truffle tests failed while running coverage") || line.contains("failing")){
+                    System.out.println("Test failed (mutant is killed).");
+                    Main.TestCondition = "Test failed (mutant is killed).";
                     temp = 1;
+                    break;
                 }else if(line.contains("Exiting without generating coverage")){
                     System.out.println("Exiting without generating coverage");
-                    testcondition = "Exiting without generating coverage";
+                    Main.TestCondition = "Exiting without generating coverage";
                     temp = 1;
+                    break;
                 }
             }
             br.close();
             isr.close();
             if(temp == 0){
                 System.out.println("All tests passed.(survive)");
-                testcondition = "All tests passed.(survive)";
+                Main.TestCondition = "All tests passed.(survive)";
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return testcondition;
+        return Main.TestCondition;
+    }
+
+    /**
+     * 判断是否编译失败
+     * @param projectpath
+     * @return
+     */
+    public static boolean isCompileFailed(String projectpath){
+        StringBuffer sb = new StringBuffer();
+        sb.append(projectpath);
+        sb.append("\\SolcovInfo.txt");
+        String SolcovInfoPath = sb.toString();
+        File SolcovInfoFile = new File(SolcovInfoPath);
+        if(!SolcovInfoFile.exists()){
+            System.out.println("Solcov文件不存在");
+            return false;
+        }
+        else{
+            BufferedReader br=null;
+            boolean iscompilefailed = false;
+            try {
+                InputStreamReader isr = new InputStreamReader(new FileInputStream(SolcovInfoFile));
+                br=new BufferedReader(isr);
+                String line = null;
+                while((line=br.readLine())!= null){
+                    if(line.contains("Compilation failed.") || line.contains("SyntaxError:")){
+                        System.out.println("中途检查发现Compilation failed.");
+                        iscompilefailed = true;
+                        break;
+                    }
+                }
+                br.close();
+                isr.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return iscompilefailed;
+        }
     }
 
     /**
@@ -159,12 +204,11 @@ public class ReadSolcovInfo {
         List<String> allcoveredlines = new ArrayList<>();
         StringBuffer sb1 = new StringBuffer();
         sb1.append(projectpath);
-        sb1.append("\\coverage\\contracts");
-        File file = new File(sb1.toString());
-        File[] fs = file.listFiles();
-        for(File f:fs){
-            if(!f.isDirectory()){
-                List<String> coveredlines = getCoveredlines(f);
+        sb1.append("\\coverage\\lcov-report");
+        List<File> filelists = FileUtil.getHtmlFiles(sb1.toString(),".html");
+        for(int i=0; i<filelists.size(); i++){
+            if(!filelists.get(i).isDirectory()){
+                List<String> coveredlines = getCoveredlines(filelists.get(i));
                 allcoveredlines.addAll(coveredlines);
             }
         }

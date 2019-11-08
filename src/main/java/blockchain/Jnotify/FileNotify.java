@@ -1,9 +1,13 @@
 package blockchain.Jnotify;
 
+import blockchain.CMDRedirect.Main;
+import blockchain.ExtractUtils.ReadSolcovInfo;
 import net.contentobjects.jnotify.JNotify;
 
 import java.io.File;
 
+import static blockchain.CMDRedirect.Main.MutationProjectPath;
+//该文件暂时作废
 public class FileNotify {
     public static boolean Completed;
     public static void notify(String filepath) throws Exception {
@@ -31,12 +35,21 @@ public class FileNotify {
         System.out.println("开始监听scTopics文件");
         long BeginTime = System.currentTimeMillis();
         long CurrentTime = 0;
-        // 定义监听持续时间，100s
+        // 定义监听持续时间，120s
         while(!Completed) {
+            //运行truffle test时定义等待编译时间，若项目编译很快可以缩短该时间，如15s
+            //若运行solidity-coverage可以去掉，有另外判断运行成功的方法
             Thread.sleep(1000*2);
-            CurrentTime = System.currentTimeMillis();
+            Boolean CompileFailed = ReadSolcovInfo.isCompileFailed(MutationProjectPath);
+            //编译失败直接退出
+            if(CompileFailed == true){
+                //System.out.println("中途检查发现Compilation failed.");
+                Listener.gain_compilefailed_result();
+                break;
+            }
             // 超时时间为120s
-            if(CurrentTime - BeginTime > 1000*60){
+            CurrentTime = System.currentTimeMillis();
+            if(CurrentTime - BeginTime > 1000*100){
                 System.out.println("solcov超时，退出");
                 break;
             }
@@ -48,11 +61,10 @@ public class FileNotify {
             System.out.println("已退出监听。");
         }
 
-
     }
 
     public static void main(String[] args) {
-        String path ="F:\\blockchain\\test1";
+        String path = "F:\\blockchain\\test1";
         System.out.println(path);
         try {
             notify(path);

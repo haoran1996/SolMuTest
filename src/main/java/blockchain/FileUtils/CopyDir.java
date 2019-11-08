@@ -66,21 +66,30 @@ public class CopyDir {
      * 文件复制的具体方法
      */
     public static void fileCopy(String src, String des) {
-        try {
-            //io流固定格式
-            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(src));
-            BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(des));
-            int i = -1;//记录获取长度
-            byte[] bt = new byte[2014];//缓冲区
-            while ((i = bis.read(bt))!=-1) {
-                bos.write(bt, 0, i);
+        File oldfile = new File(src);
+        if(!oldfile.exists()){
+            System.out.println("原文件不存在，无法复制！");
+        }
+        else{
+//            File newfile = new File(des);
+//            if(!newfile.exists()){
+//                newfile.mkdirs();
+//            }
+            try {
+                //io流固定格式
+                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(src));
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(des));
+                int i = -1;//记录获取长度
+                byte[] bt = new byte[2014];//缓冲区
+                while ((i = bis.read(bt))!=-1) {
+                    bos.write(bt, 0, i);
+                }
+                bis.close();
+                bos.close();
+                //关闭流
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            bis.close();
-            bos.close();
-            //关闭流
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
-
 }

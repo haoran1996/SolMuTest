@@ -1,10 +1,13 @@
 package blockchain.MutationUtils;
 
+import blockchain.CMDRedirect.Main;
 import blockchain.FileUtils.FileUtil;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static blockchain.CMDRedirect.Main.AllMutationInfo;
 
 public class Mutation {
     private File file;
@@ -20,7 +23,7 @@ public class Mutation {
 
     public Mutation(File file, String projectpath, String filepath, String filename, String mutationOperator, List<String> allmutationinfo) {
         this.file = file;
-        this.projectpath = projectpath;
+        this.projectpath = Main.MutationProjectPath;
         this.filepath = filepath;
         this.filename = filename;
         this.allMutationInfo = allmutationinfo;
@@ -32,7 +35,7 @@ public class Mutation {
         String tempstr = file.getName();
         this.filename = tempstr.substring(0,tempstr.length()-4);
         File tempfile = new File(file.getParent());
-        this.projectpath = tempfile.getParent();
+        this.projectpath =  Main.MutationProjectPath;
         StringBuffer sb = new StringBuffer();
         sb.append(projectpath);
         sb.append("\\mutation");
@@ -98,6 +101,7 @@ public class Mutation {
             if(hasmutated == true){
                 String MutatedFileContent = sb.toString();
                 makeMutationFile(mutationName, MutatedFileContent);
+                AllMutationInfo.add(mutationinfo);
             }
         } catch (IOException e) {
             e.printStackTrace();

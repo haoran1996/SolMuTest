@@ -1,8 +1,16 @@
 package blockchain.ExtractUtils;
 
+import blockchain.FileUtils.FileUtil;
+import cn.edu.nju.Trans;
+
 import java.io.*;
 
 public class getAST {
+
+    public static void main(String[] args) {
+        String ast = getAST("E:\\blockchain\\MutationTest\\TC\\testAST\\ast.txt");
+        FileUtil.WriteToFile("E:\\blockchain\\MutationTest\\TC\\testAST\\ast2.json",ast);
+    }
 
     /**
      * 处理solidity-parser生成的ast，返回正确ast
@@ -14,7 +22,8 @@ public class getAST {
         BufferedReader br=null;
         boolean isTestPass = true;
         try {
-            br=new BufferedReader(new StringReader(aststr));
+            InputStreamReader isr = new InputStreamReader(new FileInputStream(aststr));
+            br=new BufferedReader(isr);
             String line =null;
             String formerline = null;
             String templine = null;
